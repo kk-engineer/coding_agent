@@ -9,22 +9,22 @@ Before running the project, you must have Ollama installed to manage your local 
 - [Download Ollama](https://ollama.com/download/).
 
 # 2. Set Up the Model
-This project is optimized for the Llama 3.1 8B Instruct (Q4_K_M) model. 
+This project is optimized for the Qwen 2.5 Coder 7B Instruct model. 
 Once Ollama is installed, pull and run the specific quantized version:
 
 ```bash
 # Pull the model (this may take some time, depends on your internet speed)
-ollama run llama3.1:8b-instruct-q4_K_M
+ollama pull qwen2.5-coder:7b-instruct
 
 # Run the model (keep it running for RAG to work)
-ollama run llama3.1:8b-instruct-q4_K_M
+ollama run qwen2.5-coder:7b-instruct
 ```
 
 # 3. Clone and Setup Project
 ```bash
 # Clone the repository
-git clone https://github.com/kk-engineer/rag_agents.git
-cd rag_agents
+git clone https://github.com/kk-engineer/coding_agent.git
+cd coding_agent
 
 # Create a virtual environment
 python -m venv .venv
