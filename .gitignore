@@ -1,0 +1,9 @@
+# Virtual Environments
+.venv/
+venv/
+code_agent/
+
+# Databases
+*.sqlite3
+*.db
+db.sqlite3
