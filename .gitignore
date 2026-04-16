@@ -1,9 +1,9 @@
 # Virtual Environments
 .venv/
+.idea/
 venv/
-code_agent/
 
 # Databases
 *.sqlite3
-*.db
+*db*
 db.sqlite3
