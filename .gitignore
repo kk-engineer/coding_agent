@@ -1,9 +1,0 @@
-# Virtual Environments
-.venv/
-.idea/
-venv/
-
-# Databases
-*.sqlite3
-*db*
-db.sqlite3
