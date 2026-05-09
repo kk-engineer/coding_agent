@@ -35,7 +35,7 @@ Repository files:
     response = await stream_llm_response(
         stream,
         websocket=websocket,
-        prefix="Answering read-only question..."
+        prefix="Answering question..."
     )
 
     if config.INTERFACE_MODE == "cli":

@@ -6,6 +6,9 @@ from utils.token_usage import add_prompt_tokens_from_messages
 
 console = Console()
 BASE_URL="http://localhost:8000/v1"
+QWEN_MODEL="qwen2.5-7b"
+MISTRAL_MODEL="Mistral-Small-3bit-MLX"
+DEEPSEEK_MODEL="DeepSeek-V2-Lite-MLX"
 
 
 def empty_stream():
@@ -28,7 +31,7 @@ def chat_stream(
         add_prompt_tokens_from_messages(messages)
 
         return client.chat.completions.create(
-            model="qwen2.5-7b",
+            model=QWEN_MODEL,
             messages=messages,
             temperature=temperature,
             stream=True

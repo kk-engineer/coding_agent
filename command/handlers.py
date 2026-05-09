@@ -127,7 +127,7 @@ def handle_chat(argument: str):
 
     print_markdown_panel(
         response,
-        title="Read-only Answer",
+        title="Coding Agent Answer",
         border_style="blue"
     )
 
