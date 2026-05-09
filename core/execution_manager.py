@@ -1,5 +1,6 @@
 from config.llm_local import chat
 
+from core.prompts import EDIT_SYSTEM_PROMPT
 from utils.file_ops import read_file
 
 
@@ -39,6 +40,10 @@ def generate_updated_file(
     content = read_file(file_path)
 
     messages = [
+        {
+            "role": "system",
+            "content": EDIT_SYSTEM_PROMPT
+        },
         {
             "role": "user",
             "content": f"""

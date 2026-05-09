@@ -51,7 +51,8 @@ from utils.spinner import (
 import config.agent_config as config
 
 from config.agent_config import (
-    MAX_FIX_ATTEMPTS
+    MAX_FIX_ATTEMPTS,
+    MAX_PLAN_DIFF_FILES
 )
 
 
@@ -94,7 +95,8 @@ async def emit_step(
 
 async def plan_changes(
     user_prompt: str,
-    websocket=None
+    websocket=None,
+    include_diffs: bool = False
 ):
 
     logger = StepLogger()
@@ -124,7 +126,7 @@ async def plan_changes(
             user_prompt
         )
 
-    related_files = list(set(related_files))
+    related_files = list(dict.fromkeys(related_files))
 
     await emit_step(
         logger,
@@ -149,11 +151,95 @@ async def plan_changes(
         websocket
     )
 
+    suggested_diffs = []
+
+    if include_diffs:
+
+        suggested_diffs = generate_suggested_diffs(
+            user_prompt=user_prompt,
+            files=related_files,
+            limit=MAX_PLAN_DIFF_FILES
+        )
+
+        await emit_step(
+            logger,
+            "planning",
+            (
+                f"Generated {len(suggested_diffs)} "
+                "suggested diffs without modifying files"
+            ),
+            websocket
+        )
+
+        if websocket:
+
+            for diff_entry in suggested_diffs:
+
+                await websocket.send_json({
+                    "type": "diff",
+                    "mode": "plan",
+                    "file": diff_entry["file"],
+                    "content": diff_entry["diff"]
+                })
+
     return {
         "steps": logger.get_steps(),
         "related_files": related_files,
-        "plan": plan
+        "plan": plan,
+        "diffs": suggested_diffs
     }
+
+
+def generate_suggested_diffs(
+    user_prompt: str,
+    files: list[str],
+    limit: int = MAX_PLAN_DIFF_FILES
+):
+
+    """
+    Generate dry-run diffs for /plan without writing files or backups.
+    """
+
+    suggested_diffs = []
+
+    for file_path in files[:limit]:
+
+        try:
+
+            old_content = read_file(
+                file_path
+            )
+
+            new_content = generate_updated_file(
+                user_prompt=user_prompt,
+                file_path=file_path
+            )
+
+            if new_content == old_content:
+
+                continue
+
+            diff = generate_diff(
+                old_content,
+                new_content,
+                file_path
+            )
+
+            if diff:
+
+                suggested_diffs.append({
+                    "file": file_path,
+                    "diff": diff
+                })
+
+        except Exception as e:
+
+            suggested_diffs.append({
+                "file": file_path,
+                "diff": f"Unable to generate suggested diff: {e}"
+            })
+
+    return suggested_diffs
 
 
 async def execute_changes(

@@ -5,11 +5,18 @@ from pathlib import Path
 
 from rich.panel import Panel
 from rich.syntax import Syntax
+from rich.table import Table
 from rich.text import Text
 
+from command.commands import COMMAND_SPECS
 from core.approval import is_approved
 from core.explainer import explain_path
-from core.orchestrator import execute_changes, plan_changes
+from config.agent_config import MAX_PLAN_DIFF_FILES
+from core.orchestrator import (
+    execute_changes,
+    generate_suggested_diffs,
+    plan_changes
+)
 from repo_utils.project_detector import detect_project_type, detect_test_command
 from utils.console import console
 from utils.file_ops import list_directory
@@ -20,8 +27,45 @@ from utils.test_runner import run_tests
 
 def handle_help(help_text: str):
 
+    table = Table(
+        show_header=True,
+        header_style="bold cyan",
+        box=None,
+        expand=True
+    )
+    table.add_column("Command", style="bold green", no_wrap=True)
+    table.add_column("Description", style="white")
+    table.add_column("Aliases", style="yellow")
+    table.add_column("Example", style="dim")
+
+    for spec in COMMAND_SPECS.values():
+
+        table.add_row(
+            Text(spec.usage),
+            spec.description,
+            Text(", ".join(spec.aliases)) if spec.aliases else "",
+            spec.example or ""
+        )
+
+    help_tip = Text()
+    help_tip.append("Tips: ", style="bold")
+    help_tip.append("read-only questions stay read-only; ", style="cyan")
+    help_tip.append("change requests run as /edit; ", style="green")
+    help_tip.append("type / to reopen this menu.", style="yellow")
+
+    content = Table.grid(
+        expand=True
+    )
+    content.add_row(help_tip)
+    content.add_row(table)
+
     console.print(
-        Text(help_text)
+        Panel(
+            content,
+            title="[bold]Coding Agent Commands[/bold]",
+            border_style="cyan",
+            padding=(1, 2)
+        )
     )
 
 
@@ -36,6 +80,39 @@ def handle_plan(argument: str):
         title="Execution Plan",
         border_style="yellow"
     )
+
+    related_files = result.get("related_files", [])
+
+    if not related_files:
+
+        return
+
+    console.print(
+        "[bold cyan][planning][/bold cyan] "
+        "Generating suggested diffs without modifying files..."
+    )
+
+    suggested_diffs = generate_suggested_diffs(
+        user_prompt=argument,
+        files=related_files,
+        limit=MAX_PLAN_DIFF_FILES
+    )
+
+    if not suggested_diffs:
+
+        console.print(
+            "[dim]No suggested diffs generated.[/dim]"
+        )
+
+        return
+
+    for diff_entry in suggested_diffs:
+
+        print_diff_panel(
+            diff_entry["diff"],
+            title=f"Suggested Diff: {diff_entry['file']}",
+            border_style="magenta"
+        )
 
 
 def handle_edit(argument: str):
@@ -75,7 +152,7 @@ def handle_edit(argument: str):
 
     for diff_entry in result["diffs"]:
 
-        print_markdown_panel(
+        print_diff_panel(
             diff_entry["diff"],
             title=diff_entry["file"],
             border_style="red"
@@ -174,6 +251,26 @@ def handle_diff():
             ),
             title="[bold]Git Diff[/bold]",
             border_style="magenta"
+        )
+    )
+
+
+def print_diff_panel(
+    diff: str,
+    title: str,
+    border_style: str
+):
+
+    console.print(
+        Panel(
+            Syntax(
+                diff,
+                "diff",
+                word_wrap=True
+            ),
+            title=f"[bold]{title}[/bold]",
+            border_style=border_style,
+            padding=(1, 2)
         )
     )
 

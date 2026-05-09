@@ -170,3 +170,100 @@ def test_freeform_plan_dispatches_without_edit(monkeypatch):
     assert calls["edit"] == 0
     assert calls["plan"] == 1
     assert calls["argument"] == "plan how to add OAuth support"
+
+
+def test_handle_plan_prints_plan_before_generating_diffs(monkeypatch):
+
+    calls = []
+
+    async def fake_plan_changes(argument):
+
+        calls.append(("plan_changes", argument))
+
+        return {
+            "plan": "Plan body",
+            "related_files": ["example.py"]
+        }
+
+    def fake_markdown_panel(content, title, border_style):
+
+        calls.append(("plan_panel", title, content))
+
+    def fake_generate_suggested_diffs(user_prompt, files, limit):
+
+        calls.append(("generate_diffs", user_prompt, files, limit))
+
+        return [
+            {
+                "file": "example.py",
+                "diff": "--- old\n+++ new\n"
+            }
+        ]
+
+    def fake_diff_panel(diff, title, border_style):
+
+        calls.append(("diff_panel", title, diff))
+
+    monkeypatch.setattr(
+        "command.handlers.plan_changes",
+        fake_plan_changes
+    )
+    monkeypatch.setattr(
+        "command.handlers.print_markdown_panel",
+        fake_markdown_panel
+    )
+    monkeypatch.setattr(
+        "command.handlers.generate_suggested_diffs",
+        fake_generate_suggested_diffs
+    )
+    monkeypatch.setattr(
+        "command.handlers.print_diff_panel",
+        fake_diff_panel
+    )
+
+    from command.handlers import handle_plan
+
+    handle_plan("add greeting")
+
+    assert calls[0] == ("plan_changes", "add greeting")
+    assert calls[1] == ("plan_panel", "Execution Plan", "Plan body")
+    assert calls[2][0] == "generate_diffs"
+    assert calls[3][0] == "diff_panel"
+    assert calls[3][1] == "Suggested Diff: example.py"
+
+
+def test_run_cli_handles_keyboard_interrupt_during_dispatch(monkeypatch):
+
+    calls = []
+    inputs = iter(["/test"])
+
+    def fake_input(prompt):
+
+        return next(inputs)
+
+    def fake_dispatch_command(parsed):
+
+        raise KeyboardInterrupt
+
+    def fake_print(message):
+
+        calls.append(str(message))
+
+    monkeypatch.setattr(
+        "command.cli.console.input",
+        fake_input
+    )
+    monkeypatch.setattr(
+        "command.cli.dispatch_command",
+        fake_dispatch_command
+    )
+    monkeypatch.setattr(
+        "command.cli.console.print",
+        fake_print
+    )
+
+    from command.cli import run_cli
+
+    run_cli()
+
+    assert any("Goodbye" in message for message in calls)

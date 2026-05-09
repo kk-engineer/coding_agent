@@ -56,7 +56,14 @@ def run_cli():
             console.print(f"[red]{parsed.error}[/red]")
             continue
 
-        should_exit = dispatch_command(parsed)
+        try:
+
+            should_exit = dispatch_command(parsed)
+
+        except KeyboardInterrupt:
+
+            console.print("\n[green]Goodbye[/green]")
+            break
 
         if should_exit:
 

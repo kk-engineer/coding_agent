@@ -1,5 +1,5 @@
 from config.llm_local import chat_stream
-from core.prompts import SYSTEM_PROMPT
+from core.prompts import PLAN_SYSTEM_PROMPT
 from repo_utils.repo_scanner import scan_repo
 from repo_utils.file_selector import find_related_files
 from utils.streaming import stream_llm_response
@@ -56,12 +56,13 @@ Related Files:
     messages = [
         {
             "role": "system",
-            "content": SYSTEM_PROMPT
+            "content": PLAN_SYSTEM_PROMPT
         },
         {
             "role": "user",
             "content": f"""
 You are in planning mode.
+This is a dry run. Do not apply changes or ask for approval.
 
 User Request:
 {user_prompt}
@@ -75,8 +76,9 @@ Generate:
 3. Risks
 4. Step-by-step plan
 5. Execution order
+6. Tests or checks to run
 
-DO NOT generate code.
+Do not include full code blocks. Suggested diffs are generated separately.
 """
         }
     ]

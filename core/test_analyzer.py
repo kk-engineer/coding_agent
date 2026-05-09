@@ -2,6 +2,8 @@ from config.llm_local import (
     chat
 )
 
+from core.prompts import TEST_ANALYZER_SYSTEM_PROMPT
+
 
 def analyze_test_failure(
     user_prompt: str,
@@ -11,17 +13,7 @@ def analyze_test_failure(
     messages = [
         {
             "role": "system",
-            "content": """
-You are a senior software engineer debugging failing tests.
-
-Analyze:
-- probable root cause
-- impacted functionality
-- likely broken file/function
-- suggested fix
-
-Keep the explanation concise.
-"""
+            "content": TEST_ANALYZER_SYSTEM_PROMPT
         },
         {
             "role": "user",

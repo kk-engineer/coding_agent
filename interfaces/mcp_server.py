@@ -20,7 +20,10 @@ async def plan(prompt: str):
     Create execution plan for repo changes.
     """
 
-    return await plan_changes(prompt)
+    return await plan_changes(
+        prompt,
+        include_diffs=True
+    )
 
 
 @mcp.tool()

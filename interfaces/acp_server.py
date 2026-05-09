@@ -57,7 +57,8 @@ async def agent_socket(ws: WebSocket):
 
                 result = await plan_changes(
                     prompt,
-                    websocket=ws
+                    websocket=ws,
+                    include_diffs=True
                 )
 
             elif mode == "edit":
