@@ -10,13 +10,29 @@ def test_slash_opens_help():
     assert parsed.error is None
 
 
-def test_change_request_defaults_to_edit_instruction():
+def test_plain_change_request_defaults_to_read_only_chat():
 
     parsed = parse_command("add token validation")
 
-    assert parsed.command == Command.EDIT
+    assert parsed.command == Command.CHAT
     assert parsed.argument == "add token validation"
     assert parsed.freeform is True
+
+
+def test_explicit_edit_command_can_edit():
+
+    parsed = parse_command("/edit add token validation")
+
+    assert parsed.command == Command.EDIT
+    assert parsed.argument == "add token validation"
+
+
+def test_change_alias_can_edit():
+
+    parsed = parse_command("/change add token validation")
+
+    assert parsed.command == Command.EDIT
+    assert parsed.argument == "add token validation"
 
 
 def test_freeform_explain_codebase_is_read_only():
@@ -57,6 +73,14 @@ def test_test_alias_is_resolved():
     parsed = parse_command("/tests")
 
     assert parsed.command == Command.TEST
+
+
+def test_chat_alias_is_resolved():
+
+    parsed = parse_command("/ask what does app.py do?")
+
+    assert parsed.command == Command.CHAT
+    assert parsed.argument == "what does app.py do?"
 
 
 def test_missing_required_argument_returns_usage_error():

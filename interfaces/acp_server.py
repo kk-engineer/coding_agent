@@ -24,6 +24,7 @@ from command.services import (
     run_local_command,
     search_repository
 )
+from core.chat import answer_chat
 from core.explainer import explain_path
 from utils.token_usage import get_token_usage, reset_token_usage
 
@@ -62,6 +63,13 @@ async def agent_socket(ws: WebSocket):
             if mode in {"help", "/help", "/"}:
 
                 result = get_help()
+
+            elif mode in {"chat", "ask"}:
+
+                result = await answer_chat(
+                    prompt or data.get("question") or "",
+                    websocket=ws
+                )
 
             elif mode == "plan":
 

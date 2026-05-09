@@ -162,6 +162,40 @@ def test_freeform_plan_dispatches_without_edit(monkeypatch):
     assert calls["argument"] == "plan how to add OAuth support"
 
 
+def test_freeform_change_request_dispatches_chat_without_edit(monkeypatch):
+
+    calls = {
+        "chat": 0,
+        "edit": 0
+    }
+
+    def fake_handle_chat(argument):
+
+        calls["chat"] += 1
+        calls["argument"] = argument
+
+    def fake_handle_edit(argument):
+
+        calls["edit"] += 1
+
+    monkeypatch.setattr(
+        "command.cli.handle_chat",
+        fake_handle_chat
+    )
+    monkeypatch.setattr(
+        "command.cli.handle_edit",
+        fake_handle_edit
+    )
+
+    parsed = parse_command("add token validation")
+    should_exit = dispatch_command(parsed)
+
+    assert should_exit is False
+    assert calls["chat"] == 1
+    assert calls["edit"] == 0
+    assert calls["argument"] == "add token validation"
+
+
 def test_handle_plan_prints_plan_before_generating_diffs(monkeypatch):
 
     calls = []

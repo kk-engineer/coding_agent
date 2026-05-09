@@ -10,6 +10,8 @@ class Command(str, Enum):
 
     HELP = "/help"
 
+    CHAT = "/chat"
+
     EDIT = "/edit"
 
     PLAN = "/plan"
@@ -53,11 +55,19 @@ COMMAND_SPECS = {
         description="Show commands and examples.",
         aliases=("/", "/?"),
     ),
+    Command.CHAT: CommandSpec(
+        command=Command.CHAT,
+        usage="/chat <question>",
+        description="Ask a read-only question without planning or editing.",
+        aliases=("/ask",),
+        example="/chat what does app.py do?",
+        requires_argument=True,
+    ),
     Command.EDIT: CommandSpec(
         command=Command.EDIT,
         usage="/edit <instruction>",
         description="Plan, confirm, and apply code changes.",
-        aliases=("/do",),
+        aliases=("/do", "/change"),
         example="/edit add JWT validation",
         requires_argument=True,
     ),

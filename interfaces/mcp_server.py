@@ -14,6 +14,7 @@ from command.services import (
     search_repository
 )
 from core.orchestrator import plan_changes, execute_changes
+from core.chat import answer_chat
 from core.explainer import explain_file
 from utils.token_usage import get_token_usage, reset_token_usage
 
@@ -43,6 +44,18 @@ def help():
 
     reset_token_usage()
     return with_token_usage(get_help())
+
+
+@mcp.tool()
+async def chat(prompt: str):
+
+    """
+    Ask a read-only question without planning or editing.
+    """
+
+    reset_token_usage()
+    result = await answer_chat(prompt)
+    return with_token_usage(result)
 
 
 @mcp.tool()

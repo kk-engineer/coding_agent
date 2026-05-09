@@ -30,25 +30,6 @@ PLAN_INTENTS = (
     "what would it take",
 )
 
-EDIT_INTENTS = (
-    "add",
-    "change",
-    "create",
-    "delete",
-    "edit",
-    "fix",
-    "implement",
-    "modify",
-    "move",
-    "refactor",
-    "remove",
-    "rename",
-    "replace",
-    "update",
-    "write",
-)
-
-
 @dataclass(frozen=True)
 class ParsedCommand:
 
@@ -64,8 +45,8 @@ def parse_command(user_input: str) -> ParsedCommand:
     """
     Parse CLI commands.
 
-    Slash-prefixed input is treated as a command. Plain text is treated as an
-    edit instruction, mirroring common coding-agent CLIs.
+    Slash-prefixed input is treated as a command. Plain text is read-only chat
+    unless it clearly maps to another read-only command such as explain/plan.
     """
 
     raw_input = user_input
@@ -136,8 +117,8 @@ def infer_freeform_command(user_input: str) -> tuple[Command, str]:
     """
     Infer intent for natural-language CLI input.
 
-    Read-only requests must stay read-only. Editing is only the default when the
-    prompt looks like a change request or the intent is otherwise ambiguous.
+    Editing is never inferred from plain text. Code changes require explicit
+    /edit, /do, or /change.
     """
 
     lowered = user_input.lower().strip()
@@ -150,11 +131,7 @@ def infer_freeform_command(user_input: str) -> tuple[Command, str]:
 
         return Command.PLAN, user_input
 
-    if _starts_with_intent(lowered, EDIT_INTENTS):
-
-        return Command.EDIT, user_input
-
-    return Command.EDIT, user_input
+    return Command.CHAT, user_input
 
 
 def extract_explain_target(user_input: str) -> str:

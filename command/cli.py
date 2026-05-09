@@ -2,6 +2,7 @@ from command.command_router import ParsedCommand, parse_command
 from command.commands import Command
 from command.handlers import (
     handle_clear,
+    handle_chat,
     handle_diff,
     handle_edit,
     handle_explain,
@@ -92,6 +93,10 @@ def dispatch_command(parsed: ParsedCommand) -> bool:
     if parsed.command == Command.HELP:
 
         handle_help(HELP_TEXT)
+
+    elif parsed.command == Command.CHAT:
+
+        handle_chat(parsed.argument)
 
     elif parsed.command == Command.PLAN:
 

@@ -16,6 +16,7 @@ from command.services import (
     search_repository
 )
 from core.approval import is_approved
+from core.chat import answer_chat
 from core.explainer import explain_path
 from config.agent_config import MAX_PLAN_DIFF_FILES
 from core.orchestrator import (
@@ -116,6 +117,19 @@ def handle_plan(argument: str):
             title=f"Suggested Diff: {diff_entry['file']}",
             border_style="magenta"
         )
+
+
+def handle_chat(argument: str):
+
+    response = asyncio.run(
+        answer_chat(argument)
+    )
+
+    print_markdown_panel(
+        response,
+        title="Read-only Answer",
+        border_style="blue"
+    )
 
 
 def handle_edit(argument: str):
@@ -364,4 +378,3 @@ def handle_status():
 def handle_clear():
 
     console.clear()
-
