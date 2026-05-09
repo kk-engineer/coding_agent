@@ -41,7 +41,7 @@ def should_ignore(path):
     return False
 
 
-def scan_repo(root="."):
+def scan_repo(root=None):
 
     """
     Recursively scan repository files.
@@ -49,7 +49,9 @@ def scan_repo(root="."):
 
     files = []
 
-    for path in Path(WORKSPACE_ROOT).rglob("*"):
+    scan_root = Path(root or WORKSPACE_ROOT)
+
+    for path in scan_root.rglob("*"):
 
         if should_ignore(path):
 
@@ -81,6 +83,32 @@ def scan_python_files(root="."):
         files.append(
             str(path)
         )
+
+    return files
+
+
+def scan_files_by_extensions(
+    extensions: set[str],
+    root="."
+):
+
+    """
+    Scan files matching any extension.
+    """
+
+    files = []
+
+    for path in Path(root).rglob("*"):
+
+        if should_ignore(path):
+
+            continue
+
+        if path.is_file() and path.suffix in extensions:
+
+            files.append(
+                str(path)
+            )
 
     return files
 

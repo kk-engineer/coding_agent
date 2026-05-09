@@ -17,7 +17,8 @@ from core.test_analyzer import (
 )
 
 from repo_utils.file_selector import (
-    find_related_files
+    find_related_files,
+    is_generated_file
 )
 
 from repo_utils.project_detector import (
@@ -193,7 +194,8 @@ async def plan_changes(
 def generate_suggested_diffs(
     user_prompt: str,
     files: list[str],
-    limit: int = MAX_PLAN_DIFF_FILES
+    limit: int = MAX_PLAN_DIFF_FILES,
+    progress_callback=None
 ):
 
     """
@@ -202,9 +204,32 @@ def generate_suggested_diffs(
 
     suggested_diffs = []
 
-    for file_path in files[:limit]:
+    selected_files = [
+        file_path
+        for file_path in files
+        if not is_generated_file(file_path)
+    ][:limit]
+    total = len(selected_files)
+
+    for index, file_path in enumerate(
+        selected_files,
+        start=1
+    ):
+
+        if progress_callback:
+
+            progress_callback(
+                "start",
+                file_path,
+                index,
+                total
+            )
 
         try:
+
+            if is_generated_file(file_path):
+
+                continue
 
             old_content = read_file(
                 file_path
@@ -238,6 +263,17 @@ def generate_suggested_diffs(
                 "file": file_path,
                 "diff": f"Unable to generate suggested diff: {e}"
             })
+
+        finally:
+
+            if progress_callback:
+
+                progress_callback(
+                    "end",
+                    file_path,
+                    index,
+                    total
+                )
 
     return suggested_diffs
 
@@ -492,12 +528,5 @@ async def execute_changes(
         "rollbacks": all_rollbacks,
         "tests": final_test_result
     }
-
-    if websocket:
-
-        await websocket.send_json({
-            "type": "complete",
-            "result": final_result
-        })
 
     return final_result

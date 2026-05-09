@@ -1,6 +1,4 @@
 import asyncio
-import shlex
-import subprocess
 from pathlib import Path
 
 from rich.panel import Panel
@@ -9,6 +7,14 @@ from rich.table import Table
 from rich.text import Text
 
 from command.commands import COMMAND_SPECS
+from command.services import (
+    get_diff,
+    get_status,
+    list_files_for_command,
+    run_detected_tests,
+    run_local_command,
+    search_repository
+)
 from core.approval import is_approved
 from core.explainer import explain_path
 from config.agent_config import MAX_PLAN_DIFF_FILES
@@ -17,12 +23,8 @@ from core.orchestrator import (
     generate_suggested_diffs,
     plan_changes
 )
-from repo_utils.project_detector import detect_project_type, detect_test_command
 from utils.console import console
-from utils.file_ops import list_directory
 from utils.panel import print_markdown_panel
-from utils.search_code import search_code
-from utils.test_runner import run_tests
 
 
 def handle_help(help_text: str):
@@ -95,7 +97,8 @@ def handle_plan(argument: str):
     suggested_diffs = generate_suggested_diffs(
         user_prompt=argument,
         files=related_files,
-        limit=MAX_PLAN_DIFF_FILES
+        limit=MAX_PLAN_DIFF_FILES,
+        progress_callback=print_diff_progress
     )
 
     if not suggested_diffs:
@@ -187,7 +190,7 @@ def handle_explain(argument: str):
 
 def handle_search(argument: str):
 
-    results = search_code(argument)
+    results = search_repository(argument)
 
     if not results:
 
@@ -214,8 +217,8 @@ def handle_search(argument: str):
 
 def handle_test():
 
-    test_command = detect_test_command()
-    result = run_tests(test_command)
+    result = run_detected_tests()
+    test_command = result.get("command")
     output = result["stdout"] or result["stderr"] or "No test output."
     style = "green" if result["success"] else "red"
 
@@ -228,9 +231,9 @@ def handle_test():
 
 def handle_diff():
 
-    diff = _git_output(["git", "diff"])
+    diff = get_diff()
 
-    if not diff:
+    if diff == "No unstaged changes.":
 
         console.print(
             Panel(
@@ -275,24 +278,39 @@ def print_diff_panel(
     )
 
 
+def print_diff_progress(
+    event: str,
+    file_path: str,
+    index: int,
+    total: int
+):
+
+    if event == "start":
+
+        console.print(
+            f"[dim]({index}/{total}) Preparing suggested diff for "
+            f"{file_path}...[/dim]"
+        )
+
+    elif event == "end":
+
+        console.print(
+            f"[dim]({index}/{total}) Finished {file_path}[/dim]"
+        )
+
+
 def handle_files(argument: str = "."):
 
     root = argument or "."
 
     try:
 
-        files = list_directory(root)
+        visible_files = list_files_for_command(root)
 
     except Exception as e:
 
         console.print(f"[red]{e}[/red]")
         return
-
-    visible_files = [
-        file_path
-        for file_path in files
-        if Path(file_path).is_file()
-    ]
 
     for file_path in visible_files[:80]:
 
@@ -314,74 +332,36 @@ def handle_run(argument: str):
 
     try:
 
-        command = shlex.split(argument)
+        result = run_local_command(argument)
 
-    except ValueError as e:
+    except Exception as e:
 
-        console.print(f"[red]Invalid command: {e}[/red]")
+        console.print(f"[red]{e}[/red]")
         return
 
-    if not command:
-
-        console.print("[red]Usage: /run <command>[/red]")
-        return
-
-    result = subprocess.run(
-        command,
-        capture_output=True,
-        text=True,
-        check=False
-    )
-
-    output = result.stdout or result.stderr or "No output."
-    style = "green" if result.returncode == 0 else "red"
+    output = result["stdout"] or result["stderr"] or "No output."
+    style = "green" if result["success"] else "red"
 
     print_markdown_panel(
         output,
-        title=f"Command exited {result.returncode}",
+        title=f"Command exited {result['returncode']}",
         border_style=style
     )
 
 
 def handle_status():
 
-    cwd = Path.cwd()
-    project_type = detect_project_type()
-    test_command = detect_test_command()
-    branch = _git_output(["git", "branch", "--show-current"]) or "unknown"
-    status = _git_output(["git", "status", "--short"])
-    status_text = status if status else "clean"
+    status = get_status()
 
     console.print("[bold]Workspace[/bold]")
-    console.print(f"  Path: {cwd}")
-    console.print(f"  Project: {project_type}")
-    console.print(f"  Test command: {test_command}")
-    console.print(f"  Branch: {branch}")
-    console.print(f"  Git: {status_text}")
+    console.print(f"  Path: {status['path']}")
+    console.print(f"  Project: {status['project']}")
+    console.print(f"  Test command: {status['test_command']}")
+    console.print(f"  Branch: {status['branch']}")
+    console.print(f"  Git: {status['git']}")
 
 
 def handle_clear():
 
     console.clear()
 
-
-def _git_output(command: list[str]) -> str:
-
-    try:
-
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            check=False
-        )
-
-    except OSError:
-
-        return ""
-
-    if result.returncode != 0:
-
-        return ""
-
-    return result.stdout.strip()

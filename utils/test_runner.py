@@ -1,7 +1,17 @@
 import subprocess
 
 
-def run_tests(command="pytest"):
+def run_tests(command=None):
+
+    if not command:
+
+        return {
+            "success": False,
+            "stdout": "",
+            "stderr": "No test command detected for this project.",
+            "returncode": 1,
+            "command": command
+        }
 
     result = subprocess.run(
         command,
@@ -14,5 +24,6 @@ def run_tests(command="pytest"):
         "success": result.returncode == 0,
         "stdout": result.stdout,
         "stderr": result.stderr,
-        "returncode": result.returncode
+        "returncode": result.returncode,
+        "command": command
     }

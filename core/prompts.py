@@ -20,7 +20,8 @@ Rules:
 - Preserve unrelated code exactly
 - Prefer minimal, focused changes
 - Never truncate code
-- Keep imports, formatting, and public APIs consistent with the existing file
+- Keep imports, formatting, selectors, templates, and public APIs consistent with the existing file
+- Respect the file's language and framework conventions, including HTML, CSS, JavaScript, TypeScript, static-site templates, Hugo, and Docsy
 """
 
 EXPLAINER_SYSTEM_PROMPT = """

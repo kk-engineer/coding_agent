@@ -6,12 +6,26 @@ from fastapi import WebSocketDisconnect
 
 import uvicorn
 
+import config.agent_config
+# MUST happen BEFORE other project imports
+config.agent_config.INTERFACE_MODE = "acp"
+
 from core.orchestrator import (
     plan_changes,
     execute_changes
 )
 
-from utils.console import console
+from command.services import (
+    get_diff,
+    get_help,
+    get_status,
+    list_files_for_command,
+    run_detected_tests,
+    run_local_command,
+    search_repository
+)
+from core.explainer import explain_path
+from utils.token_usage import get_token_usage, reset_token_usage
 
 app = FastAPI()
 
@@ -21,20 +35,12 @@ async def agent_socket(ws: WebSocket):
 
     await ws.accept()
 
-    console.print(
-        "[green]Client connected[/green]"
-    )
-
     try:
 
         while True:
 
             raw_data = await ws.receive_text()
-
-            console.print(
-                f"[cyan]Received:[/cyan] "
-                f"{raw_data}"
-            )
+            reset_token_usage()
 
             try:
 
@@ -53,7 +59,11 @@ async def agent_socket(ws: WebSocket):
 
             prompt = data.get("prompt")
 
-            if mode == "plan":
+            if mode in {"help", "/help", "/"}:
+
+                result = get_help()
+
+            elif mode == "plan":
 
                 result = await plan_changes(
                     prompt,
@@ -68,6 +78,58 @@ async def agent_socket(ws: WebSocket):
                     websocket=ws
                 )
 
+            elif mode == "explain":
+
+                result = await explain_path(
+                    data.get("path") or prompt or ".",
+                    websocket=ws
+                )
+
+            elif mode == "search":
+
+                result = search_repository(
+                    data.get("query") or prompt or ""
+                )
+
+            elif mode == "test":
+
+                result = run_detected_tests(
+                    data.get("command")
+                )
+
+            elif mode == "diff":
+
+                result = get_diff()
+
+            elif mode == "files":
+
+                result = list_files_for_command(
+                    data.get("path") or "."
+                )
+
+            elif mode == "pwd":
+
+                result = get_status()["path"]
+
+            elif mode == "run":
+
+                result = run_local_command(
+                    data.get("command") or prompt or ""
+                )
+
+            elif mode == "status":
+
+                result = get_status()
+
+            elif mode == "clear":
+
+                result = {
+                    "success": True,
+                    "message": (
+                        "Clear is only meaningful in the interactive CLI."
+                    )
+                }
+
             else:
 
                 result = {
@@ -79,21 +141,15 @@ async def agent_socket(ws: WebSocket):
 
             await ws.send_json({
                 "type": "complete",
-                "result": result
+                "result": result,
+                "token_usage": get_token_usage()
             })
 
     except WebSocketDisconnect:
-
-        console.print(
-            "[red]Client disconnected[/red]"
-        )
+        pass
 
 
 def main():
-
-    console.print(
-        "[bold green]ACP Server Ready[/bold green]"
-    )
 
     uvicorn.run(
         app,

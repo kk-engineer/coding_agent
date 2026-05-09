@@ -16,6 +16,7 @@ from command.handlers import (
 )
 from command.help_text import HELP_TEXT
 from utils.console import console
+from utils.token_usage import get_token_usage, reset_token_usage
 
 
 PROMPT = "[bold cyan]agent[/bold cyan]> "
@@ -58,6 +59,8 @@ def run_cli():
 
         try:
 
+            reset_token_usage()
+
             should_exit = dispatch_command(parsed)
 
         except KeyboardInterrupt:
@@ -65,9 +68,23 @@ def run_cli():
             console.print("\n[green]Goodbye[/green]")
             break
 
+        print_token_usage()
+
         if should_exit:
 
             break
+
+
+def print_token_usage():
+
+    usage = get_token_usage()
+
+    console.print(
+        "[dim]Tokens: "
+        f"prompt={usage['prompt_tokens']}, "
+        f"completion={usage['completion_tokens']}, "
+        f"total={usage['total_tokens']}[/dim]"
+    )
 
 
 def dispatch_command(parsed: ParsedCommand) -> bool:

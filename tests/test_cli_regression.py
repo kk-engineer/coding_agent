@@ -11,19 +11,14 @@ def test_test_command_runs_detected_test_command(monkeypatch):
 
     calls = {}
 
-    def fake_detect_test_command():
-
-        return "pytest"
-
-    def fake_run_tests(command):
-
-        calls["command"] = command
+    def fake_run_detected_tests():
 
         return {
             "success": True,
             "stdout": "2 passed",
             "stderr": "",
-            "returncode": 0
+            "returncode": 0,
+            "command": "pytest"
         }
 
     def fake_print_panel(content, title, border_style):
@@ -33,12 +28,8 @@ def test_test_command_runs_detected_test_command(monkeypatch):
         calls["border_style"] = border_style
 
     monkeypatch.setattr(
-        "command.handlers.detect_test_command",
-        fake_detect_test_command
-    )
-    monkeypatch.setattr(
-        "command.handlers.run_tests",
-        fake_run_tests
+        "command.handlers.run_detected_tests",
+        fake_run_detected_tests
     )
     monkeypatch.setattr(
         "command.handlers.print_markdown_panel",
@@ -47,7 +38,6 @@ def test_test_command_runs_detected_test_command(monkeypatch):
 
     handle_test()
 
-    assert calls["command"] == "pytest"
     assert calls["content"] == "2 passed"
     assert calls["title"] == "Test Results: pytest"
     assert calls["border_style"] == "green"
@@ -189,7 +179,12 @@ def test_handle_plan_prints_plan_before_generating_diffs(monkeypatch):
 
         calls.append(("plan_panel", title, content))
 
-    def fake_generate_suggested_diffs(user_prompt, files, limit):
+    def fake_generate_suggested_diffs(
+        user_prompt,
+        files,
+        limit,
+        progress_callback=None
+    ):
 
         calls.append(("generate_diffs", user_prompt, files, limit))
 

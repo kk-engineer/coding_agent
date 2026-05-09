@@ -1,7 +1,8 @@
-from config.llm_local import chat
+from config.llm_local import chat_stream
 
 from core.prompts import EDIT_SYSTEM_PROMPT
 from utils.file_ops import read_file
+from utils.streaming import collect_llm_response
 
 
 def strip_markdown_code_fence(content: str) -> str:
@@ -59,8 +60,8 @@ Do not include Markdown fences, language labels, commentary, or explanations.
         }
     ]
 
-    response = chat(messages)
+    stream = chat_stream(messages)
 
-    updated_content = response.choices[0].message.content
+    updated_content = collect_llm_response(stream)
 
     return strip_markdown_code_fence(updated_content)

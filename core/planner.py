@@ -79,6 +79,7 @@ Generate:
 6. Tests or checks to run
 
 Do not include full code blocks. Suggested diffs are generated separately.
+Respect the detected languages/frameworks, including frontend assets and static-site templates.
 """
         }
     ]

@@ -1,8 +1,9 @@
 from config.llm_local import (
-    chat
+    chat_stream
 )
 
 from core.prompts import TEST_ANALYZER_SYSTEM_PROMPT
+from utils.streaming import collect_llm_response
 
 
 def analyze_test_failure(
@@ -27,6 +28,6 @@ Test Output:
         }
     ]
 
-    response = chat(messages)
+    stream = chat_stream(messages)
 
-    return response.choices[0].message.content
+    return collect_llm_response(stream)

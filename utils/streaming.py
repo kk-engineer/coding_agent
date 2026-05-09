@@ -1,6 +1,11 @@
 import time
 
+import config.agent_config as config
 from utils.console import console
+from utils.token_usage import (
+    add_completion_tokens_from_text,
+    set_token_usage
+)
 
 
 async def stream_llm_response(
@@ -19,9 +24,11 @@ async def stream_llm_response(
 
     if prefix:
 
-        console.print(
-            f"\n[bold cyan]{prefix}[/bold cyan]\n"
-        )
+        if config.INTERFACE_MODE == "cli":
+
+            console.print(
+                f"\n[bold cyan]{prefix}[/bold cyan]\n"
+            )
 
         if websocket:
 
@@ -38,9 +45,11 @@ async def stream_llm_response(
             "The model server may be offline or unreachable."
         )
 
-        console.print(
-            f"[bold red]{error_msg}[/bold red]"
-        )
+        if config.INTERFACE_MODE == "cli":
+
+            console.print(
+                f"[bold red]{error_msg}[/bold red]"
+            )
 
         if websocket:
 
@@ -55,6 +64,8 @@ async def stream_llm_response(
 
         try:
 
+            record_provider_usage(chunk)
+
             delta = (
                 chunk.choices[0]
                 .delta
@@ -64,10 +75,12 @@ async def stream_llm_response(
             if not delta:
                 continue
 
-            console.print(
-                delta,
-                end=""
-            )
+            if config.INTERFACE_MODE == "cli":
+
+                console.print(
+                    delta,
+                    end=""
+                )
 
             full_response += delta
 
@@ -112,6 +125,77 @@ async def stream_llm_response(
             "content": token_buffer
         })
 
-    console.print()
+    add_completion_tokens_from_text(full_response)
+
+    if config.INTERFACE_MODE == "cli":
+
+        console.print()
 
     return full_response
+
+
+def collect_llm_response(
+    stream,
+    on_token=None
+):
+
+    """
+    Collect a streaming LLM response without rendering it to the CLI.
+    """
+
+    full_response = ""
+
+    if not stream:
+
+        return full_response
+
+    for chunk in stream:
+
+        try:
+
+            record_provider_usage(chunk)
+
+            delta = (
+                chunk.choices[0]
+                .delta
+                .content
+            )
+
+            if not delta:
+
+                continue
+
+            full_response += delta
+
+            if on_token:
+
+                on_token(delta)
+
+        except Exception:
+
+            pass
+
+    add_completion_tokens_from_text(full_response)
+
+    return full_response
+
+
+def record_provider_usage(chunk):
+
+    usage = getattr(chunk, "usage", None)
+
+    if not usage:
+
+        return
+
+    prompt_tokens = getattr(usage, "prompt_tokens", None)
+    completion_tokens = getattr(usage, "completion_tokens", None)
+
+    if prompt_tokens is None or completion_tokens is None:
+
+        return
+
+    set_token_usage(
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens
+    )

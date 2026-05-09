@@ -41,6 +41,7 @@ Explain:
 - architecture
 - important logic
 - dependencies
+- language/framework conventions
 - risks
 """
 
@@ -71,6 +72,7 @@ Explain:
 - important modules
 - execution flow
 - dependencies
+- language/framework conventions
 - risks
 """
 

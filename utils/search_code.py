@@ -153,7 +153,7 @@ def search_symbol(
     - refactors
     """
 
-    return search_python_code(
+    return search_code(
         query=symbol_name,
         root=root
     )

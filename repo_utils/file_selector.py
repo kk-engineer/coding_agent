@@ -8,16 +8,87 @@ from repo_utils.repo_scanner import (
 
 
 IGNORE_EXTENSIONS = {
-    ".png",
-    ".jpg",
-    ".jpeg",
+    ".7z",
+    ".avif",
+    ".bmp",
+    ".db",
+    ".dll",
+    ".dylib",
+    ".eot",
+    ".exe",
     ".gif",
-    ".svg",
+    ".gz",
     ".ico",
+    ".jar",
+    ".jpeg",
+    ".jpg",
+    ".lockb",
+    ".mp3",
+    ".mp4",
+    ".o",
+    ".otf",
     ".pdf",
+    ".png",
+    ".pyc",
+    ".rar",
+    ".so",
+    ".tar",
+    ".wasm",
+    ".webp",
+    ".woff",
+    ".woff2",
     ".zip",
-    ".db"
 }
+
+
+GENERATED_FILE_NAMES = {
+    "Cargo.lock",
+    "Gemfile.lock",
+    "composer.lock",
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "poetry.lock",
+    "uv.lock",
+    "yarn.lock",
+}
+
+
+GENERATED_PATH_PARTS = {
+    ".next",
+    ".nuxt",
+    ".svelte-kit",
+    "coverage",
+    "dist",
+    "generated",
+    "node_modules",
+    "public",
+    "target",
+}
+
+
+GENERATED_SUFFIXES = (
+    ".generated.css",
+    ".generated.js",
+    ".gen.go",
+    ".min.css",
+    ".min.js",
+)
+
+
+def is_generated_file(file_path: str):
+
+    parts = set(file_path.split("/"))
+    file_name = file_path.split("/")[-1]
+
+    if file_name in GENERATED_FILE_NAMES:
+
+        return True
+
+    if parts & GENERATED_PATH_PARTS:
+
+        return True
+
+    return file_path.endswith(GENERATED_SUFFIXES)
 
 
 def filter_code_files(files):
@@ -29,6 +100,10 @@ def filter_code_files(files):
     filtered = []
 
     for file in files:
+
+        if is_generated_file(file):
+
+            continue
 
         if any(
             file.endswith(ext)
@@ -75,7 +150,7 @@ def find_related_files(
                 except Exception:
                     pass
 
-    matches = list(set(matches))
+    matches = list(dict.fromkeys(matches))
 
     matches = filter_code_files(
         matches
