@@ -1,4 +1,4 @@
-from config.llm_local import (
+from config.llm_cloud import (
     chat_stream
 )
 

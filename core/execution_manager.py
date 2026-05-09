@@ -1,4 +1,4 @@
-from config.llm_local import chat_stream
+from config.llm_cloud import chat_stream
 
 from core.prompts import EDIT_SYSTEM_PROMPT
 from utils.file_ops import read_file

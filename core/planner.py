@@ -1,4 +1,4 @@
-from config.llm_local import chat_stream
+from config.llm_cloud import chat_stream
 from core.prompts import PLAN_SYSTEM_PROMPT
 from repo_utils.repo_scanner import scan_repo
 from repo_utils.file_selector import find_related_files

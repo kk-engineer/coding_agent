@@ -1,5 +1,5 @@
 import config.agent_config as config
-from config.llm_local import chat_stream
+from config.llm_cloud import chat_stream
 from core.prompts import CHAT_SYSTEM_PROMPT
 from repo_utils.repo_scanner import scan_repo
 from utils.console import console

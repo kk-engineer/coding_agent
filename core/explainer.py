@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import config.agent_config as config
-from config.llm_local import chat_stream
+from config.llm_cloud import chat_stream
 from core.prompts import EXPLAINER_SYSTEM_PROMPT
 from utils.console import console
 from utils.file_ops import list_directory, read_file
