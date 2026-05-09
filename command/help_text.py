@@ -1,42 +1,36 @@
-HELP_TEXT = """
-Available Commands
-━━━━━━━━━━━━━━━━━━
-
-/help
-    Show all commands
-
-/edit <instruction>
-    Execute code modifications
-
-    Example:
-    /edit add JWT validation
+from command.commands import COMMAND_SPECS
 
 
-/plan <instruction>
-    Generate execution plan only
+def build_help_text() -> str:
 
-    Example:
-    /plan add OAuth support
+    lines = [
+        "Available Commands",
+        "━━━━━━━━━━━━━━━━━━",
+        "",
+        "Tip: read-only questions stay read-only.",
+        "Tip: change requests run as /edit.",
+        "Tip: type / to show this menu.",
+        "",
+    ]
+
+    for spec in COMMAND_SPECS.values():
+
+        lines.append(spec.usage)
+        lines.append(f"    {spec.description}")
+
+        if spec.aliases:
+
+            lines.append(
+                f"    Aliases: {', '.join(spec.aliases)}"
+            )
+
+        if spec.example:
+
+            lines.append(f"    Example: {spec.example}")
+
+        lines.append("")
+
+    return "\n".join(lines).rstrip()
 
 
-/explain <file>
-    Explain a file/module
-
-    Example:
-    /explain auth.py
-
-
-/search <query>
-    Search repository
-
-    Example:
-    /search validate_token
-
-
-/test
-    Run test suite
-
-
-/exit
-    Exit coding agent
-"""
+HELP_TEXT = build_help_text()

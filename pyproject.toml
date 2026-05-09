@@ -25,4 +25,4 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["core", "config", "command", "ast_utils", "navigation", "repo_utils", "interfaces"]
+packages = ["core", "config", "command", "ast_utils", "navigation", "repo_utils", "interfaces", "utils"]

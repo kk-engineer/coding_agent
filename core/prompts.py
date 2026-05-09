@@ -8,6 +8,8 @@ Rules:
 - Prefer AST-safe edits
 - Prefer minimal edits
 - Never truncate code
+- Return raw file contents for code edits, without Markdown fences
+- Planning and explanation requests must never modify files
 - Run tests after modifications
 - Avoid breaking existing functionality
 """

@@ -7,7 +7,7 @@ config.agent_config.INTERFACE_MODE = "mcp"
 from core.orchestrator import plan_changes, execute_changes
 from utils.search_code import search_code
 from utils.test_runner import run_tests
-from command.explainer import explain_file
+from core.explainer import explain_file
 from utils.logger import log
 
 mcp = FastMCP("coding-agent")
@@ -58,7 +58,7 @@ async def explain(path: str):
     """
     Explain code in a file.
     """
-    return explain_file(path)
+    return await explain_file(path)
 
 
 def main():
