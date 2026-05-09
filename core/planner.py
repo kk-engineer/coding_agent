@@ -1,31 +1,10 @@
-from config.llm_local import (
-    chat_stream
-)
-
-from core.prompts import (
-    SYSTEM_PROMPT
-)
-
-from repo_utils.repo_scanner import (
-    scan_repo
-)
-
-from repo_utils.file_selector import (
-    find_related_files
-)
-
-from utils.streaming import (
-    stream_llm_response
-)
-
-from utils.spinner import (
-    AgentSpinner
-)
-
-from utils.console import (
-    console
-)
-
+from config.llm_local import chat_stream
+from core.prompts import SYSTEM_PROMPT
+from repo_utils.repo_scanner import scan_repo
+from repo_utils.file_selector import find_related_files
+from utils.streaming import stream_llm_response
+from utils.spinner import AgentSpinner
+from utils.console import console
 import config.agent_config as config
 
 

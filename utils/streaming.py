@@ -30,6 +30,27 @@ async def stream_llm_response(
                 "content": prefix
             })
 
+    # Handle failed/empty stream
+    if not stream:
+
+        error_msg = (
+            "No response stream received from LLM.\n"
+            "The model server may be offline or unreachable."
+        )
+
+        console.print(
+            f"[bold red]{error_msg}[/bold red]"
+        )
+
+        if websocket:
+
+            await websocket.send_json({
+                "type": "error",
+                "content": error_msg
+            })
+
+        return ""
+
     for chunk in stream:
 
         try:

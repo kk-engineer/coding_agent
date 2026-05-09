@@ -27,7 +27,7 @@ from core.approval import (
 )
 
 from command.explainer import (
-    explain_file
+    explain_path
 )
 
 from utils.search_code import (
@@ -55,8 +55,8 @@ def handle_plan(argument):
 
 def handle_edit(argument):
 
-    planning_result = plan_changes(
-        argument
+    planning_result = asyncio.run(
+        plan_changes(argument)
     )
 
     print_markdown_panel(
@@ -98,9 +98,7 @@ def handle_edit(argument):
         )
 
 def handle_explain(argument):
-
-
-    explanation = explain_file(argument)
+    explanation = asyncio.run(explain_path(argument))
 
     print_markdown_panel(
         explanation,
